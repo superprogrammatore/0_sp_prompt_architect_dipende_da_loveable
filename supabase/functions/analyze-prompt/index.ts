@@ -5,7 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const systemPrompt = `Sei un Senior Software Engineer e Product Architect specializzato in analisi di specifiche tecniche per web application. Analizza il prompt dell'utente che descrive un'idea di web app e restituisci una valutazione professionale strutturata.
+// Simplified system prompt - removed architecture section since we derive it from technologies
+const systemPrompt = `Sei un Senior Software Engineer e Product Architect specializzato in analisi di specifiche tecniche per web application. Analizza il prompt dell'utente e restituisci una valutazione professionale strutturata.
 
 DEVI restituire una risposta JSON valida con questa struttura esatta:
 
@@ -17,10 +18,10 @@ DEVI restituire una risposta JSON valida con questa struttura esatta:
       "name": "<nome dimensione in italiano>",
       "score": <numero 1-10>,
       "maxScore": 10,
-      "reasoning": "<spiegazione del punteggio>",
+      "reasoning": "<spiegazione breve del punteggio>",
       "missing": ["<elementi mancanti>"],
       "improvements": ["<suggerimenti concreti>"],
-      "icon": "<emoji rappresentativa>"
+      "icon": "<emoji>"
     }
   ],
   "strengthsWeaknesses": [
@@ -28,18 +29,18 @@ DEVI restituire una risposta JSON valida con questa struttura esatta:
       "id": "<stringa univoca>",
       "type": "<strength|weakness|assumption>",
       "title": "<titolo breve>",
-      "description": "<descrizione>"
+      "description": "<descrizione breve>"
     }
   ],
   "optimizedPrompt": "<versione migliorata del prompt in markdown>",
   "technologies": [
     {
-      "category": "<vedi CATEGORIE OBBLIGATORIE sotto>",
+      "category": "<categoria>",
       "primary": {
         "name": "<nome tecnologia>",
-        "reason": "<motivazione>",
-        "pros": ["<vantaggi>"],
-        "cons": ["<svantaggi>"]
+        "reason": "<motivazione breve>",
+        "pros": ["<vantaggio>"],
+        "cons": ["<svantaggio>"]
       },
       "alternative": {
         "name": "<alternativa>",
@@ -48,95 +49,51 @@ DEVI restituire una risposta JSON valida con questa struttura esatta:
       }
     }
   ],
-  "architecture": [
-    {
-      "id": "<stringa univoca>",
-      "name": "<nome componente>",
-      "technology": "<tecnologia>",
-      "role": "<ruolo nel sistema>",
-      "reason": "<motivazione>",
-      "risks": ["<rischi>"],
-      "position": { "x": <numero>, "y": <numero> },
-      "connections": ["<id altri componenti>"]
-    }
-  ],
   "vibeCodingPractices": [
     {
-      "id": "<stringa univoca>",
+      "id": "<id>",
       "category": "<categoria>",
       "title": "<titolo>",
       "description": "<descrizione>",
-      "examples": ["<esempi>"]
+      "examples": ["<esempio>"]
     }
   ],
   "architecturePractices": [
     {
-      "id": "<stringa univoca>",
+      "id": "<id>",
       "category": "<categoria>",
       "title": "<titolo>",
       "description": "<descrizione>",
-      "examples": ["<esempi>"],
-      "relatedIssues": ["<problemi correlati al prompt>"]
+      "examples": ["<esempio>"],
+      "relatedIssues": ["<problema correlato>"]
     }
   ]
 }
 
-DIMENSIONI DA VALUTARE (tutte obbligatorie):
-1. Chiarezza dell'Obiettivo (icon: 🎯)
-2. Completezza Funzionale (icon: 📋)
-3. Definizione Target Utente (icon: 👥)
-4. Vincoli Tecnici (icon: ⚙️)
-5. Considerazioni Scalabilità (icon: 📈)
-6. Considerazioni Sicurezza (icon: 🔒)
-7. Manutenibilità (icon: 🔧)
-8. Consapevolezza Architetturale (icon: 🏗️)
+DIMENSIONI DA VALUTARE (tutte obbligatorie, 8 totali):
+1. Chiarezza dell'Obiettivo (🎯)
+2. Completezza Funzionale (📋)
+3. Definizione Target Utente (👥)
+4. Vincoli Tecnici (⚙️)
+5. Considerazioni Scalabilità (📈)
+6. Considerazioni Sicurezza (🔒)
+7. Manutenibilità (🔧)
+8. Consapevolezza Architetturale (🏗️)
 
-CATEGORIE STACK TECNOLOGICO (TUTTE OBBLIGATORIE):
-L'array "technologies" DEVE contenere ESATTAMENTE 6 elementi, uno per ogni categoria nell'ordine:
-1. "Frontend" - Framework/libreria per UI (React, Next.js, Vue, Angular)
-2. "Styling" - Sistema di styling (Tailwind CSS, CSS Modules, Styled Components, Sass)
-3. "Backend" - Logica server e API (Node.js, Edge Functions, Express, FastAPI)
-4. "Database" - Persistenza dati (PostgreSQL, Supabase, MongoDB, MySQL)
-5. "Autenticazione" - Gestione utenti (Supabase Auth, Clerk, Auth0, NextAuth)
-6. "Hosting" - Piattaforma deployment (Vercel, Netlify, AWS, Railway)
+CATEGORIE STACK TECNOLOGICO (TUTTE OBBLIGATORIE - ESATTAMENTE 6):
+1. "Frontend" - React, Next.js, Vue, Angular
+2. "Styling" - Tailwind CSS, CSS Modules, Styled Components
+3. "Backend" - Node.js, Edge Functions, Express
+4. "Database" - PostgreSQL, Supabase, MongoDB
+5. "Autenticazione" - Supabase Auth, Clerk, Auth0
+6. "Hosting" - Vercel, Netlify, AWS
 
-REGOLE CATEGORIE:
-- Includi SEMPRE tutte e 6 le categorie, anche se il prompt non le menziona esplicitamente
-- Usa ESATTAMENTE questi nomi di categoria (no varianti come "Auth", "Infrastructure", "Backend/AI")
-- Suggerisci tecnologie appropriate al contesto del prompt per ogni categoria
-
-REGOLA CRITICA - COERENZA TRA SEZIONI:
-Le tecnologie specificate nell'array "technologies" DEVONO essere IDENTICHE a quelle nell'array "architecture". 
-Per garantire la coerenza:
-1. Prima definisci le tecnologie nell'array "technologies"
-2. Poi usa ESATTAMENTE gli stessi nomi in "architecture":
-   - technologies[category="Frontend"].primary.name === architecture[componente frontend].technology
-   - technologies[category="Backend"].primary.name === architecture[componente backend/api].technology
-   - technologies[category="Database"].primary.name === architecture[componente database].technology
-   - technologies[category="Autenticazione"].primary.name === architecture[componente auth].technology
-3. NON usare varianti (es. "React" vs "React + Vite", oppure "Next.js" vs "Next.js (App Router)")
-4. Scegli UN nome per ogni tecnologia e usalo IDENTICAMENTE in entrambe le sezioni
-
-LINEE GUIDA:
-- Sii specifico e concreto nei suggerimenti
-- Fornisci esempi pratici di come migliorare il prompt
-- Il prompt ottimizzato deve essere in formato markdown strutturato
-- Le tecnologie suggerite devono essere moderne e adatte al caso
-- Identifica almeno 3 punti di forza, 3 debolezze e 2-3 assunzioni implicite
-- Le best practice devono essere collegate ai problemi specifici del prompt
-- Rispondi SOLO con JSON valido, nessun testo aggiuntivo prima o dopo
-
-REGOLA CRITICA - COERENZA TRA SEZIONI:
-Le tecnologie specificate nell'array "technologies" DEVONO essere IDENTICHE a quelle nell'array "architecture". 
-Per garantire la coerenza:
-1. Prima definisci le tecnologie nell'array "technologies"
-2. Poi usa ESATTAMENTE gli stessi nomi in "architecture":
-   - technologies[category="Frontend"].primary.name === architecture[componente frontend].technology
-   - technologies[category="Backend"].primary.name === architecture[componente backend/api].technology
-   - technologies[category="Database"].primary.name === architecture[componente database].technology
-   - technologies[category="Autenticazione"].primary.name === architecture[componente auth].technology
-3. NON usare varianti (es. "React" vs "React + Vite", oppure "Next.js" vs "Next.js (App Router)")
-4. Scegli UN nome per ogni tecnologia e usalo IDENTICAMENTE in entrambe le sezioni`;
+REGOLE IMPORTANTI:
+- Includi SEMPRE tutte e 6 le categorie tecnologiche
+- Usa ESATTAMENTE questi nomi di categoria
+- Rispondi SOLO con JSON valido, nessun testo prima o dopo
+- Sii conciso nelle descrizioni (max 2 frasi per campo)
+- Identifica almeno 3 punti di forza e 3 debolezze`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -164,21 +121,41 @@ serve(async (req) => {
 
     console.log("Analyzing prompt:", prompt.substring(0, 100) + "...");
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `Analizza questo prompt che descrive un'idea di web app:\n\n${prompt}` }
-        ],
-        temperature: 0.7,
-      }),
-    });
+    // Create abort controller with 55 second timeout (edge functions have 60s limit)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 55000);
+
+    let response;
+    try {
+      response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-3-flash-preview",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: `Analizza questo prompt per una web app:\n\n${prompt}` }
+          ],
+          temperature: 0.7,
+        }),
+        signal: controller.signal,
+      });
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+        console.error("AI request timed out");
+        return new Response(
+          JSON.stringify({ error: "L'analisi sta richiedendo troppo tempo. Riprova con un prompt più breve." }),
+          { status: 504, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      throw fetchError;
+    }
+    
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -230,7 +207,7 @@ serve(async (req) => {
       }
       analysisResult = JSON.parse(jsonContent.trim());
     } catch (parseError) {
-      console.error("Failed to parse AI response as JSON:", parseError, content);
+      console.error("Failed to parse AI response as JSON:", parseError, content.substring(0, 500));
       return new Response(
         JSON.stringify({ error: "Failed to parse analysis result" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
