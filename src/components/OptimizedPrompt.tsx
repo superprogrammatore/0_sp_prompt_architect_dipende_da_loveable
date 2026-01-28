@@ -16,8 +16,23 @@ export function OptimizedPrompt({ originalPrompt, optimizedPrompt }: OptimizedPr
   
   const handleCopy = async () => {
     try {
-      // Get plain text from markdown for cleaner clipboard content
-      await navigator.clipboard.writeText(optimizedPrompt);
+      // Try modern clipboard API first
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(optimizedPrompt);
+      } else {
+        // Fallback for older browsers or non-secure contexts
+        const textArea = document.createElement("textarea");
+        textArea.value = optimizedPrompt;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+      }
+      
       setCopied(true);
       toast({
         title: "Copiato!",
@@ -25,6 +40,7 @@ export function OptimizedPrompt({ originalPrompt, optimizedPrompt }: OptimizedPr
       });
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
+      console.error("Copy failed:", error);
       toast({
         title: "Errore",
         description: "Impossibile copiare il testo. Riprova.",
