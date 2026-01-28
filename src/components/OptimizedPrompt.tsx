@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
-import { Copy, Check } from "lucide-react";
-import { useState } from "react";
+import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
@@ -11,39 +10,29 @@ interface OptimizedPromptProps {
 }
 
 export function OptimizedPrompt({ originalPrompt, optimizedPrompt }: OptimizedPromptProps) {
-  const [copied, setCopied] = useState(false);
   const { toast } = useToast();
   
-  const handleCopy = async () => {
+  const handleDownload = () => {
     try {
-      // Try modern clipboard API first
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(optimizedPrompt);
-      } else {
-        // Fallback for older browsers or non-secure contexts
-        const textArea = document.createElement("textarea");
-        textArea.value = optimizedPrompt;
-        textArea.style.position = "fixed";
-        textArea.style.left = "-999999px";
-        textArea.style.top = "-999999px";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textArea);
-      }
+      const blob = new Blob([optimizedPrompt], { type: "text/markdown;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "prompt-ottimizzato.md";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
       
-      setCopied(true);
       toast({
-        title: "Copiato!",
-        description: "Il prompt ottimizzato è stato copiato negli appunti.",
+        title: "Download completato!",
+        description: "Il file prompt-ottimizzato.md è stato scaricato.",
       });
-      setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error("Copy failed:", error);
+      console.error("Download failed:", error);
       toast({
         title: "Errore",
-        description: "Impossibile copiare il testo. Riprova.",
+        description: "Impossibile scaricare il file. Riprova.",
         variant: "destructive",
       });
     }
@@ -65,22 +54,13 @@ export function OptimizedPrompt({ originalPrompt, optimizedPrompt }: OptimizedPr
         </div>
         
         <Button
-          variant={copied ? "default" : "glow"}
+          variant="glow"
           size="sm"
-          onClick={handleCopy}
-          className="gap-2 min-w-[100px]"
+          onClick={handleDownload}
+          className="gap-2"
         >
-          {copied ? (
-            <>
-              <Check className="w-4 h-4" />
-              Copiato!
-            </>
-          ) : (
-            <>
-              <Copy className="w-4 h-4" />
-              Copia
-            </>
-          )}
+          <Download className="w-4 h-4" />
+          Scarica .md
         </Button>
       </div>
       
