@@ -154,31 +154,85 @@ REGOLE GENERALI:
 - Identifica almeno 3 punti di forza e 3 debolezze
 - Il campo optimizedPrompt deve essere MOLTO DETTAGLIATO (minimo 800 parole)`;
 
+// Input validation constants
+const MAX_PROMPT_LENGTH = 10000;
+const MIN_PROMPT_LENGTH = 10;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Authentication check
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: "Autenticazione richiesta. Effettua il login per analizzare i prompt." }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate JWT token using Supabase client
+    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    
+    if (claimsError || !claimsData?.claims) {
+      return new Response(
+        JSON.stringify({ error: "Token non valido. Effettua nuovamente il login." }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const userId = claimsData.claims.sub;
+    console.log("Authenticated user:", userId);
+
     const { prompt } = await req.json();
     
+    // Input validation - type check
     if (!prompt || typeof prompt !== "string") {
       return new Response(
-        JSON.stringify({ error: "Prompt is required" }),
+        JSON.stringify({ error: "Prompt è obbligatorio" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Input validation - sanitize and trim
+    const sanitizedPrompt = prompt.trim();
+
+    // Input validation - length check
+    if (sanitizedPrompt.length < MIN_PROMPT_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `Il prompt deve contenere almeno ${MIN_PROMPT_LENGTH} caratteri.` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (sanitizedPrompt.length > MAX_PROMPT_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `Il prompt non può superare ${MAX_PROMPT_LENGTH} caratteri.` }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      console.error("LOVABLE_API_KEY is not configured");
+      console.error("AI service configuration error");
       return new Response(
-        JSON.stringify({ error: "AI service not configured" }),
+        JSON.stringify({ error: "Servizio temporaneamente non disponibile" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("Analyzing prompt:", prompt.substring(0, 100) + "...");
+    console.log("Analyzing prompt for user:", userId, "length:", sanitizedPrompt.length);
 
     // Create abort controller with 55 second timeout (edge functions have 60s limit)
     const controller = new AbortController();
@@ -196,7 +250,7 @@ serve(async (req) => {
           model: "google/gemini-3-flash-preview",
           messages: [
             { role: "system", content: systemPrompt },
-            { role: "user", content: `Analizza questo prompt per una web app:\n\n${prompt}` }
+            { role: "user", content: `Analizza questo prompt per una web app:\n\n${sanitizedPrompt}` }
           ],
           temperature: 0.7,
         }),
