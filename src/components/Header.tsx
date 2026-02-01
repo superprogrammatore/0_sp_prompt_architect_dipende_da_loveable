@@ -3,6 +3,7 @@ import { Zap, Code2, Sparkles, LogIn, LogOut, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { AccessGateLogout } from "@/components/AccessGateLogout";
 
 export function Header() {
   const { user, signOut, loading } = useAuth();
@@ -16,34 +17,39 @@ export function Header() {
     >
       {/* Auth buttons - top right */}
       <div className="absolute top-3 md:top-4 right-3 md:right-4 z-20">
-        {!loading && (
-          <>
-            {user ? (
-              <div className="flex items-center gap-2 md:gap-3">
-                <span className="hidden sm:flex text-xs md:text-sm text-muted-foreground items-center gap-2">
-                  <User className="w-4 h-4" />
-                  <span className="truncate max-w-[120px] md:max-w-none">{user.email}</span>
-                </span>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => signOut()}
-                  className="gap-1.5 md:gap-2 text-xs md:text-sm h-8 md:h-9"
-                >
-                  <LogOut className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                  <span className="hidden sm:inline">Esci</span>
-                </Button>
-              </div>
-            ) : (
-              <Link to="/auth">
-                <Button variant="glow" size="sm" className="gap-1.5 md:gap-2 text-xs md:text-sm h-8 md:h-9">
-                  <LogIn className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                  Accedi
-                </Button>
-              </Link>
-            )}
-          </>
-        )}
+        <div className="flex items-center gap-2 md:gap-3">
+          {/* Access gate logout */}
+          <AccessGateLogout />
+          
+          {!loading && (
+            <>
+              {user ? (
+                <>
+                  <span className="hidden sm:flex text-xs md:text-sm text-muted-foreground items-center gap-2">
+                    <User className="w-4 h-4" />
+                    <span className="truncate max-w-[120px] md:max-w-none">{user.email}</span>
+                  </span>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => signOut()}
+                    className="gap-1.5 md:gap-2 text-xs md:text-sm h-8 md:h-9"
+                  >
+                    <LogOut className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                    <span className="hidden sm:inline">Esci</span>
+                  </Button>
+                </>
+              ) : (
+                <Link to="/auth">
+                  <Button variant="glow" size="sm" className="gap-1.5 md:gap-2 text-xs md:text-sm h-8 md:h-9">
+                    <LogIn className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                    Accedi
+                  </Button>
+                </Link>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       <div className="max-w-4xl mx-auto text-center pt-8 md:pt-0">
